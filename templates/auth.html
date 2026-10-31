@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Create account' if mode == 'register' else 'Sign in' }} · DevTrack{% endblock %}
+{% block body %}
+<div class="auth-page">
+  <div class="auth-brand"><a class="brand" href="{{ url_for('login') }}"><span class="brand-mark">D</span><span>devtrack<span class="brand-dot">.</span></span></a></div>
+  <main class="auth-card">
+    <div class="auth-kicker"><span class="live-dot"></span> YOUR CAREER WORKSPACE</div>
+    <h1>{{ 'Build your momentum.' if mode == 'register' else 'Welcome back.' }}</h1>
+    <p class="auth-sub">{{ 'Create an account to organize your job search.' if mode == 'register' else 'Sign in to pick up where you left off.' }}</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+    <form method="POST" class="auth-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      {% if mode == 'register' %}
+      <label>Full name<input name="name" placeholder="Chandan Singh" autocomplete="name" required></label>
+      {% endif %}
+      <label>Email address<input type="email" name="email" placeholder="you@example.com" autocomplete="email" required></label>
+      <label>Password
+        <span class="password-field">
+          <input id="password" type="password" name="password" placeholder="At least 8 characters" autocomplete="{{ 'new-password' if mode == 'register' else 'current-password' }}" required>
+          <button class="password-toggle" type="button" data-password-toggle aria-controls="password" aria-pressed="false">Show</button>
+        </span>
+      </label>
+      <button class="primary-btn auth-submit" type="submit">{{ 'Create my account' if mode == 'register' else 'Sign in to DevTrack' }} <span>→</span></button>
+    </form>
+    <div class="auth-switch">
+      {{ 'Already have an account?' if mode == 'register' else "New to DevTrack?" }}
+      <a href="{{ url_for('login' if mode == 'register' else 'register') }}">{{ 'Sign in' if mode == 'register' else 'Create an account' }}</a>
+    </div>
+  </main>
+  <div class="auth-foot">A CLEARER VIEW OF YOUR NEXT CAREER MOVE</div>
+</div>
+{% endblock %}

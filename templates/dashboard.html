@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Overview · DevTrack{% endblock %}
+{% block body %}
+<div class="layout">
+  <aside class="sidebar">
+    <a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">D</span><span>devtrack<span class="brand-dot">.</span></span></a>
+    <div class="nav-label">WORKSPACE</div>
+    <a class="nav-link active" href="{{ url_for('dashboard') }}"><span>▦</span> Overview</a>
+    <a class="nav-link" href="#applications"><span>▤</span> Applications <b>{{ stats.total }}</b></a>
+    <a class="nav-link" href="#upcoming"><span>◷</span> Interviews</a>
+    <div class="sidebar-bottom">
+      <div class="side-tip"><span>✦</span><strong>One step at a time.</strong><p>Keep your pipeline updated. Your next opportunity could be closer than you think.</p></div>
+      <div class="user-mini"><div class="avatar">{{ g.user.name[:1]|upper }}</div><div class="user-meta"><strong>{{ g.user.name }}</strong><small>{{ g.user.email }}</small></div>
+        <form method="POST" action="{{ url_for('logout') }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="logout-btn" title="Sign out">↗</button></form>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <header class="topbar">
+      <div class="crumb">Workspace <span>/</span> <b>Overview</b></div>
+      <div class="top-right"><span class="top-note">CAREER CONTROL CENTER</span><div class="top-avatar">{{ g.user.name[:1]|upper }}</div></div>
+    </header>
+
+    <section class="welcome">
+      <div><div class="eyebrow"><i></i> YOUR CAREER OVERVIEW</div><h1>Good to see you, {{ g.user.name.split()[0] }} <span>✦</span></h1><p>Your job search, all in one place. Keep moving forward.</p></div>
+      <div class="welcome-actions"><a class="secondary-btn" href="{{ url_for('export_applications') }}">↓ Export CSV</a><a class="primary-btn" href="#add-application"><span>＋</span> Add application</a></div>
+    </section>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+
+    <section class="stats">
+      <article class="stat-card featured"><div class="stat-label">TOTAL APPLICATIONS <span>↗</span></div><div class="stat-value">{{ stats.total }}</div><div class="stat-caption">Your job search at a glance</div><div class="featured-orb"></div></article>
+      <article class="stat-card"><div class="stat-label">IN PROGRESS <span class="icon-purple">◷</span></div><div class="stat-value">{{ stats.applied + stats.interview }}</div><div class="stat-caption"><i class="dot blue"></i>{{ stats.applied }} applied <em>·</em> {{ stats.interview }} interviews</div></article>
+      <article class="stat-card"><div class="stat-label">INTERVIEWS <span class="icon-orange">✧</span></div><div class="stat-value">{{ stats.interview }}</div><div class="stat-caption"><i class="dot orange"></i>Opportunities to prepare for</div></article>
+      <article class="stat-card"><div class="stat-label">OFFERS <span class="icon-green">♧</span></div><div class="stat-value">{{ stats.offers }}</div><div class="stat-caption"><i class="dot green"></i>Celebrate every milestone</div></article>
+    </section>
+
+    <section class="panel job-guide" id="job-guide">
+      <div class="panel-head"><div><div class="kicker">SOFTWARE ENGINEER JOB PLAYBOOK</div><h2>Apply with a clear plan</h2></div><span class="guide-badge">4 STEPS</span></div>
+      <div class="guide-steps">
+        <article><span>01</span><div><strong>Find a relevant opening</strong><p>Search by role, skills and location. Check the experience level and requirements before applying.</p></div></article>
+        <article><span>02</span><div><strong>Tailor your application</strong><p>Match your resume to the role. Highlight projects, your tech stack, GitHub links and measurable results.</p></div></article>
+        <article><span>03</span><div><strong>Apply on the official page</strong><p>Use the company careers page when possible. Save the job link below so you can revisit the listing.</p></div></article>
+        <article><span>04</span><div><strong>Follow up and prepare</strong><p>Track the status here, follow up politely after a week, and practise coding, project and behavioural questions.</p></div></article>
+      </div>
+      <div class="job-sites"><strong>Explore openings</strong><a href="https://www.linkedin.com/jobs/" target="_blank" rel="noopener noreferrer">LinkedIn Jobs ↗</a><a href="https://www.naukri.com/" target="_blank" rel="noopener noreferrer">Naukri ↗</a><a href="https://wellfound.com/jobs" target="_blank" rel="noopener noreferrer">Wellfound ↗</a><a href="https://cutshort.io/jobs" target="_blank" rel="noopener noreferrer">Cutshort ↗</a></div>
+      <p class="safety-note">Tip: verify the role on the company’s official careers page. Never pay a fee to apply or share an OTP.</p>
+    </section>
+
+    <section class="middle-grid">
+      <div class="panel pipeline" id="applications">
+        <div class="panel-head"><div><div class="kicker">YOUR PIPELINE</div><h2>Application activity</h2></div><span class="record-tag">{{ applications|length }} SHOWN</span></div>
+        <form class="filters" method="GET" action="{{ url_for('dashboard') }}">
+          <div class="search-field"><span>⌕</span><input name="q" value="{{ search }}" placeholder="Search company or role..."></div>
+          <select name="status"><option value="">All statuses</option>{% for s in ['Applied','Interview','Offer','Rejected'] %}<option value="{{ s }}" {% if status_filter == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select>
+          <button class="filter-button">Filter</button>
+        </form>
+        <div class="table-scroll"><table><thead><tr><th>COMPANY / ROLE</th><th>APPLIED ON</th><th>STATUS</th><th>JOB LINK</th><th></th></tr></thead><tbody>
+        {% for item in applications %}
+          <tr><td><div class="company"><div class="company-icon icon-{{ loop.index0 % 4 }}">{{ item.company[:1]|upper }}</div><div><strong>{{ item.company }}</strong><small>{{ item.role }}{% if item.location %} · {{ item.location }}{% endif %}</small></div></div></td>
+          <td class="date">{{ item.applied_on }}</td>
+          <td><form method="POST" action="{{ url_for('update_status', application_id=item.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><select class="status status-{{ item.status|lower }}" name="status" onchange="this.form.submit()">{% for s in ['Applied','Interview','Offer','Rejected'] %}<option value="{{ s }}" {% if item.status == s %}selected{% endif %}>{{ s }}</option>{% endfor %}</select></form></td>
+          <td>{% if item.job_url %}<a class="job-link" href="{{ item.job_url }}" target="_blank" rel="noopener noreferrer">View posting ↗</a>{% else %}<span class="no-job-link">—</span>{% endif %}</td>
+          <td><div class="row-actions"><a class="edit-link" href="{{ url_for('edit_application', application_id=item.id) }}">Edit / Prep</a><form method="POST" action="{{ url_for('delete_application', application_id=item.id) }}" onsubmit="return confirm('Remove this application?')"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><button class="remove" title="Delete">×</button></form></div></td></tr>
+        {% else %}<tr><td colspan="5" class="empty">No applications found. Add one to get started.</td></tr>{% endfor %}
+        </tbody></table></div>
+      </div>
+
+      <aside class="panel insight" id="upcoming">
+        <div class="kicker">A QUICK SNAPSHOT</div><h2>Pipeline health</h2><p class="muted">How your current opportunities are progressing.</p>
+        {% set total = stats.total if stats.total else 1 %}
+        {% for label, value, color in [('Applied',stats.applied,'blue'),('Interview',stats.interview,'orange'),('Offer',stats.offers,'green'),('Rejected',stats.rejected,'gray')] %}
+        <div class="progress-row"><div><span>{{ label }}</span><b>{{ value }}</b></div><div class="track"><i class="fill {{ color }}" style="width:{{ (value / total * 100)|round }}%"></i></div></div>
+        {% endfor %}
+        <div class="upcoming-box"><div class="upcoming-title"><span>◷</span> Upcoming interviews</div>
+          {% for interview in upcoming %}<div class="interview-item"><div><strong>{{ interview.company }}</strong><small>{{ interview.role }}</small></div><time>{{ interview.interview_on }}</time></div>
+          {% else %}<p class="no-interviews">No upcoming interviews added yet. Set an interview date when adding an application.</p>{% endfor %}
+        </div>
+        <div class="upcoming-box followup-box"><div class="upcoming-title"><span>↗</span> Follow-up reminders</div>
+          {% for item in followups %}<div class="interview-item"><div><strong>{{ item.company }}</strong><small>{{ item.role }}</small></div><time class="{% if item.follow_up_on < today %}overdue{% endif %}">{{ item.follow_up_on }}{% if item.follow_up_on < today %} · due{% endif %}</time></div>
+          {% else %}<p class="no-interviews">No follow-ups scheduled. Add a reminder while editing or creating an application.</p>{% endfor %}
+        </div>
+      </aside>
+    </section>
+
+    <section class="panel add-panel" id="add-application">
+      <div class="panel-head"><div><div class="kicker">NEW OPPORTUNITY</div><h2>Add an application</h2></div><span class="plus-badge">＋</span></div>
+      <form class="application-form" method="POST" action="{{ url_for('add_application') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        <label>Company name<input name="company" placeholder="e.g. Atlassian" required></label>
+        <label>Job title<input name="role" placeholder="e.g. Junior Python Developer" required></label>
+        <label>Job posting link <span class="optional">(optional)</span><input type="url" name="job_url" placeholder="https://company.com/careers/role"></label>
+        <label>Location<input name="location" placeholder="e.g. Remote / Pune"></label>
+        <label>Applied date<input type="date" name="applied_on" value="{{ today }}" required></label>
+        <label>Job type<select name="job_type"><option>Full-time</option><option>Internship</option><option>Part-time</option><option>Contract</option></select></label>
+        <label>Status<select name="status"><option>Applied</option><option>Interview</option><option>Offer</option><option>Rejected</option></select></label>
+        <label>Interview date <span class="optional">(optional)</span><input type="date" name="interview_on"></label>
+        <label>Follow-up date <span class="optional">(optional)</span><input type="date" name="follow_up_on"></label>
+        <label class="notes-label">Notes <span class="optional">(optional)</span><input name="notes" placeholder="Recruiter contact, preparation notes, follow-up..."></label>
+        <button class="primary-btn save-btn" type="submit">Save application <span>→</span></button>
+      </form>
+    </section>
+    <footer>DEVTRACK <span>•</span> BUILT FOR THE NEXT MOVE</footer>
+  </main>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Edit {{ item.company }} · DevTrack{% endblock %}
+{% block body %}
+<div class="auth-page">
+  <div class="auth-brand"><a class="brand" href="{{ url_for('dashboard') }}"><span class="brand-mark">D</span><span>devtrack<span class="brand-dot">.</span></span></a></div>
+  <main class="edit-card">
+    <a class="back-link" href="{{ url_for('dashboard') }}">← Back to dashboard</a>
+    <div class="kicker edit-kicker">APPLICATION WORKSPACE</div>
+    <h1>Edit application</h1>
+    <p class="auth-sub">Update job details, set a follow-up reminder and prepare for your interview.</p>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}{% for category, message in messages %}<div class="flash {{ category }}">{{ message }}</div>{% endfor %}{% endif %}
+    {% endwith %}
+    <form class="application-form edit-form" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <label>Company name<input name="company" value="{{ item.company }}" required></label>
+      <label>Job title<input name="role" value="{{ item.role }}" required></label>
+      <label>Job posting link<input type="url" name="job_url" value="{{ item.job_url or '' }}" placeholder="https://company.com/careers/role"></label>
+      <label>Location<input name="location" value="{{ item.location or '' }}"></label>
+      <label>Applied date<input type="date" name="applied_on" value="{{ item.applied_on }}" required></label>
+      <label>Job type<select name="job_type">{% for value in ['Full-time','Internship','Part-time','Contract'] %}<option {% if item.job_type == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+      <label>Status<select name="status">{% for value in ['Applied','Interview','Offer','Rejected'] %}<option {% if item.status == value %}selected{% endif %}>{{ value }}</option>{% endfor %}</select></label>
+      <label>Interview date<input type="date" name="interview_on" value="{{ item.interview_on or '' }}"></label>
+      <label>Follow-up reminder<input type="date" name="follow_up_on" value="{{ item.follow_up_on or '' }}"></label>
+      <label class="notes-label">Application notes<input name="notes" value="{{ item.notes or '' }}" placeholder="Recruiter contact, follow-up details..."></label>
+
+      <div class="prep-section">
+        <div class="kicker">INTERVIEW PREPARATION</div>
+        <h2>Get ready for the conversation</h2>
+        <div class="prep-checklist">
+          <label><input type="checkbox" name="prep_coding" {% if item.prep_coding %}checked{% endif %}> Practise coding and data structures</label>
+          <label><input type="checkbox" name="prep_projects" {% if item.prep_projects %}checked{% endif %}> Review projects, trade-offs and tech stack</label>
+          <label><input type="checkbox" name="prep_behavioral" {% if item.prep_behavioral %}checked{% endif %}> Prepare behavioural stories and questions</label>
+        </div>
+        <label class="prep-notes-label">Interview prep notes<textarea name="prep_notes" rows="4" placeholder="Topics to revise, interviewer questions, what went well...">{{ item.prep_notes or '' }}</textarea></label>
+      </div>
+      <div class="edit-actions"><button class="primary-btn save-btn" type="submit">Save changes <span>→</span></button><a class="cancel-link" href="{{ url_for('dashboard') }}">Cancel</a></div>
+    </form>
+  </main>
+</div>
+{% endblock %}
